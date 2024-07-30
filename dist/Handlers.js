@@ -23,7 +23,7 @@ let webcamRunning = false;
 const videoHeight = "360px";
 const videoWidth = "480px";
 let runningMode = "IMAGE";
-const resultWidthHeigth = 256;
+// const resultWidthHeigth = 256;
 let imageSegmenter;
 let labels;
 const legendColors = [
@@ -100,8 +100,6 @@ async function handleClick(event) {
     imageSegmenter.segment(event.target, callback);
 }
 
-
-
 function callback(result) {
     const cxt = canvasClick.getContext("2d");
     const { width, height } = result.categoryMask;
@@ -111,14 +109,16 @@ function callback(result) {
     let category = "";
     const mask = result.categoryMask.getAsUint8Array();
     for (let i in mask) {
-        if (mask[i] > 0) {
-            category = labels[mask[i]];
+        // if (mask[i] > 0) {
+        //     category = labels[mask[i]];
+        // }
+        if (mask[i] === 1) { // только волосы
+            const legendColor = legendColors[mask[i] % legendColors.length];
+            imageData[i * 4] = (legendColor[0] + imageData[i * 4]) / 2;
+            imageData[i * 4 + 1] = (legendColor[1] + imageData[i * 4 + 1]) / 2;
+            imageData[i * 4 + 2] = (legendColor[2] + imageData[i * 4 + 2]) / 2;
+            imageData[i * 4 + 3] = (legendColor[3] + imageData[i * 4 + 3]) / 2;
         }
-        const legendColor = legendColors[mask[i] % legendColors.length];
-        imageData[i * 4] = (legendColor[0] + imageData[i * 4]) / 2;
-        imageData[i * 4 + 1] = (legendColor[1] + imageData[i * 4 + 1]) / 2;
-        imageData[i * 4 + 2] = (legendColor[2] + imageData[i * 4 + 2]) / 2;
-        imageData[i * 4 + 3] = (legendColor[3] + imageData[i * 4 + 3]) / 2;
     }
     const uint8Array = new Uint8ClampedArray(imageData.buffer);
     const dataNew = new ImageData(uint8Array, width, height);
@@ -131,89 +131,87 @@ function callback(result) {
     const p = event.target.parentNode.getElementsByClassName("classification")[0];
     p.classList.remove("removed");
     p.innerText = "Category: " + category;
-}
-
-
-
-function callbackForVideo(result) {
-    let imageData = canvasCtx.getImageData(0, 0, video.videoWidth, video.videoHeight).data;
-    const mask = result.categoryMask.getAsFloat32Array();
-    let j = 0;
-    for (let i = 0; i < mask.length; ++i) {
-        const maskVal = Math.round(mask[i] * 255.0);
-        const legendColor = legendColors[maskVal % legendColors.length];
-        imageData[j] = (legendColor[0] + imageData[j]) / 2;
-        imageData[j + 1] = (legendColor[1] + imageData[j + 1]) / 2;
-        imageData[j + 2] = (legendColor[2] + imageData[j + 2]) / 2;
-        imageData[j + 3] = (legendColor[3] + imageData[j + 3]) / 2;
-        j += 4;
     }
-    const uint8Array = new Uint8ClampedArray(imageData.buffer);
-    const dataNew = new ImageData(uint8Array, video.videoWidth, video.videoHeight);
-    canvasCtx.putImageData(dataNew, 0, 0);
-    if (webcamRunning === true) {
-        window.requestAnimationFrame(predictWebcam);
-    }
-}
-/********************************************************************
-// Demo 2: Continuously grab image from webcam stream and segmented it.
-********************************************************************/
-// Check if webcam access is supported.
-function hasGetUserMedia() {
-    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-}
-// Get segmentation from the webcam
-let lastWebcamTime = -1;
-async function predictWebcam() {
-    if (video.currentTime === lastWebcamTime) {
+
+    function callbackForVideo(result) {
+        let imageData = canvasCtx.getImageData(0, 0, video.videoWidth, video.videoHeight).data;
+        const mask = result.categoryMask.getAsFloat32Array();
+        let j = 0;
+        for (let i = 0; i < mask.length; ++i) {
+            const maskVal = Math.round(mask[i] * 255.0);
+            const legendColor = legendColors[maskVal % legendColors.length];
+            imageData[j] = (legendColor[0] + imageData[j]) / 2;
+            imageData[j + 1] = (legendColor[1] + imageData[j + 1]) / 2;
+            imageData[j + 2] = (legendColor[2] + imageData[j + 2]) / 2;
+            imageData[j + 3] = (legendColor[3] + imageData[j + 3]) / 2;
+            j += 4;
+        }
+        const uint8Array = new Uint8ClampedArray(imageData.buffer);
+        const dataNew = new ImageData(uint8Array, video.videoWidth, video.videoHeight);
+        canvasCtx.putImageData(dataNew, 0, 0);
         if (webcamRunning === true) {
             window.requestAnimationFrame(predictWebcam);
         }
-        return;
     }
-    lastWebcamTime = video.currentTime;
-    canvasCtx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-    // Do not segmented if imageSegmenter hasn't loaded
-    if (imageSegmenter === undefined) {
-        return;
+    /********************************************************************
+    // Demo 2: Continuously grab image from webcam stream and segmented it.
+    ********************************************************************/
+    // Check if webcam access is supported.
+    function hasGetUserMedia() {
+        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
     }
-    // if image mode is initialized, create a new segmented with video runningMode
-    if (runningMode === "IMAGE") {
-        runningMode = "VIDEO";
-        await imageSegmenter.setOptions({
-            runningMode: runningMode
-        });
+    // Get segmentation from the webcam
+    let lastWebcamTime = -1;
+    async function predictWebcam() {
+        if (video.currentTime === lastWebcamTime) {
+            if (webcamRunning === true) {
+                window.requestAnimationFrame(predictWebcam);
+            }
+            return;
+        }
+        lastWebcamTime = video.currentTime;
+        canvasCtx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        // Do not segmented if imageSegmenter hasn't loaded
+        if (imageSegmenter === undefined) {
+            return;
+        }
+        // if image mode is initialized, create a new segmented with video runningMode
+        if (runningMode === "IMAGE") {
+            runningMode = "VIDEO";
+            await imageSegmenter.setOptions({
+                runningMode: runningMode
+            });
+        }
+        let startTimeMs = performance.now();
+        // Start segmenting the stream.
+        imageSegmenter.segmentForVideo(video, startTimeMs, callbackForVideo);
     }
-    let startTimeMs = performance.now();
-    // Start segmenting the stream.
-    imageSegmenter.segmentForVideo(video, startTimeMs, callbackForVideo);
-}
-// Enable the live webcam view and start imageSegmentation.
-async function enableCam(event) {
-    if (imageSegmenter === undefined) {
-        return;
+    // Enable the live webcam view and start imageSegmentation.
+    async function enableCam(event) {
+        if (imageSegmenter === undefined) {
+            return;
+        }
+        if (webcamRunning === true) {
+            webcamRunning = false;
+            enableWebcamButton.innerText = "ENABLE SEGMENTATION";
+        }
+        else {
+            webcamRunning = true;
+            enableWebcamButton.innerText = "DISABLE SEGMENTATION";
+        }
+        // getUsermedia parameters.
+        const constraints = {
+            video: true
+        };
+        // Activate the webcam stream.
+        video.srcObject = await navigator.mediaDevices.getUserMedia(constraints);
+        video.addEventListener("loadeddata", predictWebcam);
     }
-    if (webcamRunning === true) {
-        webcamRunning = false;
-        enableWebcamButton.innerText = "ENABLE SEGMENTATION";
+    // If webcam supported, add event listener to button.
+    if (hasGetUserMedia()) {
+        enableWebcamButton = document.getElementById("webcamButton");
+        enableWebcamButton.addEventListener("click", enableCam);
     }
     else {
-        webcamRunning = true;
-        enableWebcamButton.innerText = "DISABLE SEGMENTATION";
+        console.warn("getUserMedia() is not supported by your browser");
     }
-    // getUsermedia parameters.
-    const constraints = {
-        video: true
-    };
-    // Activate the webcam stream.
-    video.srcObject = await navigator.mediaDevices.getUserMedia(constraints);
-    video.addEventListener("loadeddata", predictWebcam);
-}
-// If webcam supported, add event listener to button.
-if (hasGetUserMedia()) {
-    enableWebcamButton = document.getElementById("webcamButton");
-    enableWebcamButton.addEventListener("click", enableCam);
-}
-else {
-    console.warn("getUserMedia() is not supported by your browser");
-}
