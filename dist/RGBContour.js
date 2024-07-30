@@ -3,28 +3,28 @@
 // Палитра chosen
 ********************************************************************/
 // Get DOM elements
-const colorPicker = document.getElementById('colorPicker');
-const alphaSlider = document.getElementById('alphaSlider');
-const alphaValue = document.getElementById('alphaValue');
-const widthSlider = document.getElementById('widthSlider');
-const widthValue = document.getElementById('widthValue');
+const colorPickerContour = document.getElementById('colorPickerContour');
+const alphaSliderContour = document.getElementById('alphaSliderContour');
+const alphaValueContour = document.getElementById('alphaValueContour');
+const widthSliderContour = document.getElementById('widthSliderContour');
+const widthValueContour = document.getElementById('widthValueContour');
 const saveButton = document.getElementById('saveColor');
-const savedColorDiv = document.getElementById('savedColor');
+const savedColorDivContour = document.getElementById('savedColorContour');
 
 // Load saved color from localStorage if it exists
 window.addEventListener('load', () => {
-    const savedColor = localStorage.getItem('selectedColor');
+    const savedColorContour = localStorage.getItem('selectedColorContour');
     const savedAlpha = localStorage.getItem('selectedAlpha');
     const savedWidth = localStorage.getItem('selectedWidth');
     // alert(savedWidth);
-    if (savedColor) {
-        savedColorDiv.style.backgroundColor = savedColor;
-        colorPicker.value = savedColor.slice(0, 7);
-        alphaSlider.value = savedAlpha ? savedAlpha : 100;
-        widthSlider.value = savedWidth ? savedWidth : 2;
-        alphaValue.textContent = `${alphaSlider.value}%`;
-        widthValue.textContent = `${widthSlider.value}%`;
-        savedColorDiv.style.height = savedWidth + 'px';
+    if (savedColorContour) {
+        savedColorDivContour.style.backgroundColor = savedColorContour;
+        colorPickerContour.value = savedColorContour.slice(0, 7);
+        alphaSliderContour.value = savedAlpha ? savedAlpha : 100;
+        widthSliderContour.value = savedWidth ? savedWidth : 2;
+        alphaValueContour.textContent = `${alphaSliderContour.value}%`;
+        widthValueContour.textContent = `${widthSliderContour.value}%`;
+        savedColorDivContour.style.height = savedWidth + 'px';
     }
 });
 
@@ -37,28 +37,28 @@ function hexToRgba(hex, alpha) {
 }
 
 // Update alpha value label
-alphaSlider.addEventListener('input', () => {
-    alphaValue.textContent = `${alphaSlider.value}%`;
+alphaSliderContour.addEventListener('input', () => {
+    alphaValueContour.textContent = `${alphaSliderContour.value}%`;
 });
 
-widthSlider.addEventListener('input', () => {
-    const selectedWidth = widthSlider.value;
-    widthValue.textContent = `${selectedWidth}%`;
-    savedColorDiv.style.height = selectedWidth + 'px';
+widthSliderContour.addEventListener('input', () => {
+    const selectedWidth = widthSliderContour.value;
+    widthValueContour.textContent = `${selectedWidth}%`;
+    savedColorDivContour.style.height = selectedWidth + 'px';
 });
 
 // Save the selected color and alpha to localStorage and show alert with RGBA value
 saveButton.addEventListener('click', () => {
-    const selectedColor = colorPicker.value;
-    const selectedAlpha = alphaSlider.value;
-    const selectedWidth = widthSlider.value;
-    localStorage.setItem('selectedColor', selectedColor);
+    const selectedColorContour = colorPickerContour.value;
+    const selectedAlpha = alphaSliderContour.value;
+    const selectedWidth = widthSliderContour.value;
+    localStorage.setItem('selectedColorContour', selectedColorContour);
     localStorage.setItem('selectedAlpha', selectedAlpha);
     localStorage.setItem('selectedWidth', selectedWidth);
-    const rgbaColor = hexToRgba(selectedColor, selectedAlpha);
-    savedColorDiv.style.backgroundColor = rgbaColor;
-    savedColorDiv.style.height = selectedWidth + 'px';
-    // alert(savedColorDiv.height);
+    const rgbaColor = hexToRgba(selectedColorContour, selectedAlpha);
+    savedColorDivContour.style.backgroundColor = rgbaColor;
+    savedColorDivContour.style.height = selectedWidth + 'px';
+    // alert(savedColorDivContour.height);
 });
 // ********************************************************************
 
@@ -68,10 +68,10 @@ saveButton.addEventListener('click', () => {
 const hairIndex = 1;  // Assuming the index for hair
 
 export const drawContoursAroundRegion = (mask, width, height, ctx) => {
-    const savedColor = localStorage.getItem('selectedColor');
+    const savedColorContour = localStorage.getItem('selectedColorContour');
     const savedAlpha = localStorage.getItem('selectedAlpha');
     const savedWidth = localStorage.getItem('selectedWidth');
-    const rgbaColor = hexToRgba(savedColor, 100-savedAlpha);
+    const rgbaColor = hexToRgba(savedColorContour, 100-savedAlpha);
     ctx.strokeStyle = rgbaColor;
     // ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
     // ctx.strokeStyle = "green";
