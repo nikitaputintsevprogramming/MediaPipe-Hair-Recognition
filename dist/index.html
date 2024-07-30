@@ -32,10 +32,12 @@ limitations under the License. -->
   <p><b>Click on an image below</b> to see its Segmentation.</p>
 
   <input type="color" id="colorPicker" />
+  <input type="range" id="alphaPicker" min="0" max="100" value="100" />
+  <label for="alphaPicker" id="alphaValue">100%</label>
   <button id="saveColor">Save Color</button>
   <div id="savedColor" style="width: 100px; height: 100px; border: 1px solid #000;"></div>
   <script src="script.js"></script>
-  
+
   <div class="segmentOnClick">
     <canvas class="removed"></canvas>
     <img src="../images/women.jpg" crossorigin="anonymous" title="Click to get segmentation!" />
